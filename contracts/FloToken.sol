@@ -14,6 +14,7 @@ contract FloToken {
 
     // Adresses with token supply
     mapping(address => uint256) public balanceOf;
+    mapping(address => mapping(address => uint256)) public allowance;
 
     // Constructor
     constructor(uint256 _initialSupply) {
@@ -23,6 +24,11 @@ contract FloToken {
     }
 
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
+    event Approval(
+        address indexed _owner,
+        address indexed _spender,
+        uint256 _value
+    );
 
     // Transfer
     function transfer(address _to, uint256 _value)
@@ -37,6 +43,37 @@ contract FloToken {
 
         // Transfer Event
         emit Transfer(msg.sender, _to, _value);
+        // Return a boolean
+        return true;
+    }
+
+    function approve(address _spender, uint256 _value)
+        public
+        returns (bool success)
+    {
+        allowance[msg.sender][_spender] = _value;
+
+        // Approval Event
+        emit Approval(msg.sender, _spender, _value);
+        return true;
+    }
+
+    function transferFrom(
+        address _from,
+        address _to,
+        uint256 _value
+    ) public returns (bool success) {
+        // Require _from has enough tokens
+        require(balanceOf[_from] >= _value);
+        // Require allowance is big enough
+        require(_value <= allowance[_from][msg.sender]);
+        // Change the balance
+        balanceOf[_from] -= _value;
+        balanceOf[_to] += _value;
+        allowance[_from][msg.sender] -= _value;
+        // Update the allowance
+        // Transfer Event
+        emit Transfer(_from, _to, _value);
         // Return a boolean
         return true;
     }
